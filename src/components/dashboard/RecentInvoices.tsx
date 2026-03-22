@@ -6,9 +6,10 @@ import { InvoiceWithClient } from "@/services/invoice.service";
 
 interface RecentInvoicesProps {
   invoices: InvoiceWithClient[];
+  currencySymbol?: string;
 }
 
-export const RecentInvoices = ({ invoices }: RecentInvoicesProps) => {
+export const RecentInvoices = ({ invoices, currencySymbol = "Rp" }: RecentInvoicesProps) => {
   if (invoices.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/50 p-10 text-center text-zinc-600 sm:p-12">
@@ -87,7 +88,7 @@ export const RecentInvoices = ({ invoices }: RecentInvoicesProps) => {
                 </div>
               </td>
               <td className="whitespace-nowrap px-4 py-4 text-right font-semibold text-zinc-900 sm:px-6">
-                Rp{(invoice.totalCents / 100).toLocaleString()}
+                {currencySymbol}{(invoice.totalCents / 100).toLocaleString()}
               </td>
               <td className="whitespace-nowrap px-4 py-4 text-xs font-medium text-zinc-600 sm:px-6">
                 {new Date(invoice.dueDate).toLocaleDateString()}

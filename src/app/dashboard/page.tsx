@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { calculateDashboardStats, getInvoices } from "@/services/invoice.service";
+import { getUserById } from "@/services/user.service";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ExternalLink, Plus } from "lucide-react";
@@ -16,8 +17,14 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id;
-  const stats = await calculateDashboardStats(userId);
-  const recentInvoices = await getInvoices(userId);
+  const [stats, recentInvoices, user] = await Promise.all([
+    calculateDashboardStats(userId),
+    getInvoices(userId),
+    getUserById(userId)
+  ]);
+
+  const currency = user?.defaultCurrency || "IDR";
+  const currencySymbol = currency === "USD" ? "$" : currency === "EUR" ? "€" : "Rp";
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -45,7 +52,7 @@ export default async function DashboardPage() {
       <SubscriptionNotice />
 
       {/* Stats Grid */}
-      <DashboardStats stats={stats} />
+      <DashboardStats stats={stats} currencySymbol={currencySymbol} />
 
       {/* Recent Activity */}
       <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
@@ -60,7 +67,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
         <div className="p-4 sm:p-6">
-          <RecentInvoices invoices={recentInvoices.slice(0, 5)} />
+          <RecentInvoices invoices={recentInvoices.slice(0, 5)} currencySymbol={currencySymbol} />
         </div>
       </div>
     </div>

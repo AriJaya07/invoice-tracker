@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getInvoices, calculateDashboardStats, InvoiceWithClient } from "@/services/invoice.service";
+import { getUserById } from "@/services/user.service";
 import { 
   TrendingUp, 
   ArrowUpRight, 
@@ -17,9 +18,15 @@ export default async function IncomePage() {
     redirect("/login");
   }
 
-  const stats = await calculateDashboardStats(session.user.id);
-  const invoices = await getInvoices(session.user.id);
+  const [stats, invoices, user] = await Promise.all([
+    calculateDashboardStats(session.user.id),
+    getInvoices(session.user.id),
+    getUserById(session.user.id)
+  ]);
+
   const paidInvoices = invoices.filter((i: InvoiceWithClient) => i.status === "PAID");
+  const currency = user?.defaultCurrency || "IDR";
+  const currencySymbol = currency === "USD" ? "$" : currency === "EUR" ? "€" : "Rp";
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -61,7 +68,7 @@ export default async function IncomePage() {
             Total received
           </p>
           <p className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
-            Rp{stats.totalEarned.toLocaleString()}
+            {currencySymbol}{stats.totalEarned.toLocaleString()}
           </p>
           <div className="mt-6 flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-800">
             <ArrowUpRight className="h-4 w-4" aria-hidden />
@@ -77,7 +84,7 @@ export default async function IncomePage() {
             Projected income
           </p>
           <p className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
-            Rp{stats.pendingAmount.toLocaleString()}
+            {currencySymbol}{stats.pendingAmount.toLocaleString()}
           </p>
           <p className="mt-6 text-sm font-medium italic text-zinc-600">
             From{" "}
@@ -94,7 +101,7 @@ export default async function IncomePage() {
             Annual goal
           </p>
           <p className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Rp500,000,000
+            {currencySymbol}500,000,000
           </p>
           <div className="mt-6">
             <div className="mb-2 flex justify-between text-xs font-bold uppercase tracking-tight text-blue-200">
@@ -165,7 +172,7 @@ export default async function IncomePage() {
                         : "N/A"}
                     </td>
                     <td className="px-6 py-4 text-right font-semibold text-emerald-700 sm:px-8 sm:py-5">
-                      Rp{(item.totalCents / 100).toLocaleString()}
+                      {currencySymbol}{(item.totalCents / 100).toLocaleString()}
                     </td>
                   </tr>
                 ))}

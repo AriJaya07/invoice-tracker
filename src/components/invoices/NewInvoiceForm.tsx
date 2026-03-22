@@ -22,19 +22,29 @@ import Link from "next/link";
 
 interface NewInvoiceFormProps {
   clients: { id: string; name: string; email: string }[];
+  user: {
+    invoicePrefix: string | null;
+    defaultCurrency: string | null;
+    defaultInvoiceNote: string | null;
+  };
 }
 
-export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
+export const NewInvoiceForm = ({ clients, user }: NewInvoiceFormProps) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const prefix = user?.invoicePrefix || "INV";
+  const currency = user?.defaultCurrency || "IDR";
+  const currencySymbol = currency === "USD" ? "$" : currency === "EUR" ? "€" : "Rp";
+
   const [formData, setFormData] = useState({
     clientId: "",
-    invoiceNumber: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+    invoiceNumber: `${prefix}-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
     issueDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
-    notes: "",
+    notes: user?.defaultInvoiceNote || "",
   });
 
   const [items, setItems] = useState([
@@ -263,7 +273,7 @@ export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
                       className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-400"
                       aria-hidden
                     >
-                      Rp
+                      {currencySymbol}
                     </span>
                     <input
                       aria-label={`Line ${index + 1} unit price`}
@@ -326,21 +336,23 @@ export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
                     Subtotal
                   </span>
                   <span className="font-semibold text-white">
-                    Rp{subtotal.toLocaleString()}
+                    {currencySymbol}{subtotal.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-zinc-300">
                   <span className="font-semibold uppercase tracking-wider">
                     Tax (0%)
                   </span>
-                  <span className="font-semibold text-white">Rp0</span>
+                  <span className="font-semibold text-white">
+                    {currencySymbol}0
+                  </span>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/20 pt-4">
                   <span className="text-xs font-bold uppercase tracking-widest text-blue-300">
                     Total
                   </span>
                   <span className="text-2xl font-bold tracking-tight">
-                    Rp{subtotal.toLocaleString()}
+                    {currencySymbol}{subtotal.toLocaleString()}
                   </span>
                 </div>
               </div>

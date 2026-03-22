@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/services/client.service";
 import { createInvoice, updateInvoiceStatus } from "@/services/invoice.service";
+import { updateUser } from "@/services/user.service";
 import { InvoiceStatus } from "@prisma/client";
 
 // --- CLIENT ACTIONS ---
@@ -59,5 +60,16 @@ export async function updateInvoiceStatusAction(id: string, status: InvoiceStatu
   await updateInvoiceStatus(id, session.user.id, status);
   revalidatePath("/dashboard/invoices");
   revalidatePath("/dashboard/income");
+  revalidatePath("/dashboard");
+}
+
+// --- USER ACTIONS ---
+
+export async function updateUserAction(data: any) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  await updateUser(session.user.id, data);
+  revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
 }

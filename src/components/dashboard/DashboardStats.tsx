@@ -8,27 +8,28 @@ interface StatsProps {
     clientCount: number;
     totalInvoices: number;
   };
+  currencySymbol?: string;
 }
 
-export const DashboardStats = ({ stats }: StatsProps) => {
+export const DashboardStats = ({ stats, currencySymbol = "Rp" }: StatsProps) => {
   const cards = [
     {
       label: "Total Earned",
-      value: `Rp${stats.totalEarned.toLocaleString()}`,
+      value: `${currencySymbol}${stats.totalEarned.toLocaleString()}`,
       icon: TrendingUp,
       color: "text-emerald-700",
       bg: "bg-emerald-50",
     },
     {
       label: "Pending Amount",
-      value: `Rp${stats.pendingAmount.toLocaleString()}`,
+      value: `${currencySymbol}${stats.pendingAmount.toLocaleString()}`,
       icon: Clock,
       color: "text-blue-700",
       bg: "bg-blue-50",
     },
     {
       label: "Overdue Amount",
-      value: `Rp${stats.overdueAmount.toLocaleString()}`,
+      value: `${currencySymbol}${stats.overdueAmount.toLocaleString()}`,
       icon: AlertCircle,
       color: "text-red-700",
       bg: "bg-red-50",
