@@ -2,20 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Users, 
-  Settings, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  Settings,
+  CreditCard,
   TrendingUp,
   ChevronLeft,
-  LogOut
+  LogOut,
+  Menu,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import { cn } from "@/lib/cn";
 
-const menuItems = [
+const menuItems: { icon: LucideIcon; label: string; href: string }[] = [
   { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
   { icon: FileText, label: "Invoices", href: "/dashboard/invoices" },
   { icon: Users, label: "Clients", href: "/dashboard/clients" },
@@ -24,74 +28,167 @@ const menuItems = [
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
+function DashboardNav({
+  pathname,
+  isCollapsed,
+  mobileOpen,
+  onNavigate,
+}: {
+  pathname: string;
+  isCollapsed: boolean;
+  mobileOpen: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <nav className="flex-1 space-y-1 px-3 py-2" aria-label="Dashboard">
+      {menuItems.map((item) => {
+        const isActive = pathname === item.href;
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            title={isCollapsed && !mobileOpen ? item.label : undefined}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              isActive
+                ? "bg-blue-50 text-blue-800"
+                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+            )}
+          >
+            <Icon
+              className={cn(
+                "h-5 w-5 shrink-0",
+                isActive ? "text-blue-700" : "text-zinc-400"
+              )}
+              aria-hidden
+            />
+            {(!isCollapsed || mobileOpen) && <span>{item.label}</span>}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export const Sidebar = () => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { signOut, user } = useUser();
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
+
+  const closeMobile = () => setMobileOpen(false);
+
   return (
-    <aside 
-      className={`
-        flex flex-col border-r bg-white transition-all duration-300 h-screen sticky top-0
-        ${isCollapsed ? "w-20" : "w-64"}
-      `}
-    >
-      <div className="p-6 flex items-center justify-between">
-        {!isCollapsed && (
-          <span className="font-bold text-xl tracking-tight text-gray-900">
-            Invoice<span className="text-blue-600">Flow</span>
-          </span>
-        )}
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-          <ChevronLeft className={`w-5 h-5 transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
-        </button>
-      </div>
-
-      <nav className="flex-1 px-4 py-2 space-y-1">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group
-                ${isActive 
-                  ? "bg-blue-50 text-blue-700" 
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }
-              `}
-            >
-              <item.icon className={`w-5 h-5 ${isActive ? "text-blue-700" : "text-gray-400 group-hover:text-gray-600"}`} />
-              {!isCollapsed && <span className="font-medium">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="p-4 border-t">
-        {!isCollapsed && user && (
-          <div className="mb-4 px-3 py-2 bg-gray-50 rounded-lg flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-                {user.name?.[0] || user.email?.[0]?.toUpperCase()}
-             </div>
-             <div className="flex-1 min-w-0">
-               <p className="text-sm font-medium text-gray-900 truncate">{user.name || "User"}</p>
-               <p className="text-xs text-gray-500 truncate">{user.email}</p>
-             </div>
-          </div>
-        )}
+    <>
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 backdrop-blur-md md:hidden">
         <button
-          onClick={() => signOut()}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          aria-expanded={mobileOpen}
+          aria-controls="dashboard-sidebar"
+          aria-label="Open navigation menu"
         >
-          <LogOut className="w-5 h-5" />
-          {!isCollapsed && <span className="font-medium">Sign Out</span>}
+          <Menu className="h-6 w-6" />
         </button>
-      </div>
-    </aside>
+        <span className="font-semibold tracking-tight text-zinc-900">
+          Invoice<span className="text-blue-600">Flow</span>
+        </span>
+        <span className="w-10" aria-hidden />
+      </header>
+
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-zinc-900/50 backdrop-blur-sm md:hidden"
+          aria-label="Close menu"
+          onClick={closeMobile}
+        />
+      ) : null}
+
+      <aside
+        id="dashboard-sidebar"
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-zinc-200 bg-white transition-transform duration-200 ease-out md:sticky md:top-0 md:z-0 md:h-screen md:translate-x-0",
+          isCollapsed ? "md:w-20" : "md:w-64",
+          mobileOpen
+            ? "w-64 max-w-[85vw] translate-x-0 shadow-xl"
+            : "-translate-x-full md:translate-x-0"
+        )}
+      >
+        <div className="flex items-center justify-between p-4 md:p-6">
+          {!isCollapsed && (
+            <span className="text-lg font-bold tracking-tight text-zinc-900">
+              Invoice<span className="text-blue-600">Flow</span>
+            </span>
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={closeMobile}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 md:hidden"
+              aria-label="Close navigation menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden rounded-lg p-2 text-zinc-600 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 md:inline-flex"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <ChevronLeft
+                className={cn(
+                  "h-5 w-5 transition-transform",
+                  isCollapsed && "rotate-180"
+                )}
+              />
+            </button>
+          </div>
+        </div>
+
+        <DashboardNav
+          pathname={pathname}
+          isCollapsed={isCollapsed}
+          mobileOpen={mobileOpen}
+          onNavigate={closeMobile}
+        />
+
+        <div className="mt-auto border-t border-zinc-100 p-4">
+          {!isCollapsed && user && (
+            <div className="mb-4 flex items-center gap-3 rounded-lg bg-zinc-50 px-3 py-2">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-800">
+                {user.name?.[0] || user.email?.[0]?.toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-zinc-900">
+                  {user.name || "User"}
+                </p>
+                <p className="truncate text-xs text-zinc-500">{user.email}</p>
+              </div>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+          >
+            <LogOut className="h-5 w-5 shrink-0" aria-hidden />
+            {(!isCollapsed || mobileOpen) && <span>Sign Out</span>}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };

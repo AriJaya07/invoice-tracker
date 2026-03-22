@@ -2,13 +2,13 @@ import React from "react";
 import { cn } from "@/lib/cn";
 import { fieldBase, fieldErrorText, fieldHint, fieldLabel } from "./field-classes";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   helperText?: string;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, helperText, className = "", id, ...props }, ref) => {
     const autoId = React.useId();
     const fieldId = id ?? autoId;
@@ -27,7 +27,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ) : null}
           </label>
         ) : null}
-        <input
+        <textarea
           ref={ref}
           id={fieldId}
           aria-invalid={error ? true : undefined}
@@ -36,7 +36,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               .filter(Boolean)
               .join(" ") || undefined
           }
-          className={cn(fieldBase, error && "border-red-600", className)}
+          className={cn(fieldBase, "min-h-[120px] resize-y py-3", error && "border-red-600", className)}
           {...props}
         />
         {error ? (
@@ -54,4 +54,4 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = "Input";
+Textarea.displayName = "Textarea";

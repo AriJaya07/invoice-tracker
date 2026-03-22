@@ -9,6 +9,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "@/lib/validations";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
+import { FormDivider } from "@/components/ui/FormDivider";
+import { Card } from "@/components/ui/Card";
+import { LogoMark } from "@/components/ui/LogoMark";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -41,7 +45,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Automatically sign in after registration
       const loginResult = await signIn("credentials", {
         email: data.email,
         password: data.password,
@@ -54,7 +57,7 @@ export default function RegisterPage() {
         router.push("/dashboard");
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -66,18 +69,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-10 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md border-zinc-200 p-6 shadow-lg sm:p-10">
         <div className="text-center">
-          <Link href="/" className="inline-block">
-             <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-               <span className="text-white font-bold text-2xl">I</span>
-             </div>
-          </Link>
-          <h2 className="text-3xl font-extrabold text-gray-900">Create Account</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <div className="mb-6 flex justify-center">
+            <LogoMark size="lg" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+            Create your account
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600">
             Already have an account?{" "}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link
+              href="/login"
+              className="font-semibold text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded-sm"
+            >
               Sign in
             </Link>
           </p>
@@ -85,11 +91,12 @@ export default function RegisterPage() {
 
         <div className="mt-8 space-y-6">
           <Button
+            type="button"
             variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full"
             onClick={handleGoogleSignIn}
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -110,24 +117,14 @@ export default function RegisterPage() {
             Sign up with Google
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or use your email</span>
-            </div>
-          </div>
+          <FormDivider label="Or use your email" />
 
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            {error && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm border border-red-100">
-                {error}
-              </div>
-            )}
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+            {error ? <Alert variant="error">{error}</Alert> : null}
             <Input
-              label="Full Name"
+              label="Full name"
               type="text"
+              autoComplete="name"
               required
               error={errors.name?.message}
               {...register("name")}
@@ -135,6 +132,7 @@ export default function RegisterPage() {
             <Input
               label="Email address"
               type="email"
+              autoComplete="email"
               required
               error={errors.email?.message}
               {...register("email")}
@@ -142,22 +140,19 @@ export default function RegisterPage() {
             <Input
               label="Password"
               type="password"
+              autoComplete="new-password"
               required
               error={errors.password?.message}
-              {...register("password")}
               helperText="Minimum 8 characters"
+              {...register("password")}
             />
 
-            <Button
-              type="submit"
-              className="w-full py-3"
-              isLoading={isLoading}
-            >
-              Create Account
+            <Button type="submit" className="w-full" isLoading={isLoading}>
+              Create account
             </Button>
           </form>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

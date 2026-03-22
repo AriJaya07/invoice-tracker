@@ -103,53 +103,55 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900">
       <Script
         src="https://app.sandbox.midtrans.com/snap/snap.js"
         data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
       />
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl lg:text-6xl">
-            Simple, Transparent Pricing
+      <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mb-12 text-center sm:mb-16">
+          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl">
+            Simple, transparent pricing
           </h1>
-          <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose the plan that's right for your business. All plans start with a 14-day free trial.
+          <p className="mx-auto mt-4 max-w-2xl text-base text-zinc-600 sm:text-lg">
+            Choose the plan that fits your business. Every plan starts with a 14-day free trial.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
           {plans.map((plan) => {
             const isCurrentPlan = currentPlan === plan.planId;
             return (
               <div 
                 key={plan.name}
                 className={`
-                  bg-white rounded-2xl border p-8 flex flex-col transition-all duration-300
+                  flex flex-col rounded-2xl border bg-white p-6 transition-shadow duration-300 sm:p-8
                   ${plan.highlight 
-                    ? "ring-2 ring-blue-600 shadow-xl scale-105 z-10" 
-                    : "border-gray-200 shadow-sm hover:shadow-md"
+                    ? "border-blue-600 shadow-lg ring-2 ring-blue-600 md:z-10 md:-mt-2 md:mb-2 md:scale-[1.02]" 
+                    : "border-zinc-200 shadow-sm hover:shadow-md"
                   }
                 `}
               >
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                  <p className="mt-2 text-gray-500 text-sm h-10">{plan.description}</p>
-                  <div className="mt-6 flex items-baseline">
-                    <span className="text-4xl font-extrabold text-gray-900">
-                      Rp{parseInt(plan.price).toLocaleString()}
+                <div className="mb-6 sm:mb-8">
+                  <h3 className="text-xl font-bold text-zinc-900">{plan.name}</h3>
+                  <p className="mt-2 min-h-[2.5rem] text-sm text-zinc-600">{plan.description}</p>
+                  <div className="mt-6 flex flex-wrap items-baseline gap-x-1">
+                    <span className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
+                      Rp{parseInt(plan.price, 10).toLocaleString()}
                     </span>
-                    {!plan.isFree && <span className="ml-1 text-gray-500">/mo</span>}
+                    {!plan.isFree ? (
+                      <span className="text-sm font-medium text-zinc-500">/month</span>
+                    ) : null}
                   </div>
                 </div>
 
-                <ul className="flex-1 space-y-4 mb-8">
+                <ul className="mb-8 flex-1 space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-500 mt-0.5" />
-                      <span className="text-gray-600 text-sm">{feature}</span>
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
+                      <span className="text-sm text-zinc-600">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -168,9 +170,15 @@ export default function PricingPage() {
           })}
         </div>
 
-        <div className="mt-20 text-center">
-          <p className="text-gray-500">
-            Need a custom plan? <a href="#" className="text-blue-600 font-medium">Contact Sales</a>
+        <div className="mt-16 text-center sm:mt-20">
+          <p className="text-sm text-zinc-600">
+            Need a custom plan?{" "}
+            <a
+              href="#"
+              className="font-semibold text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded-sm"
+            >
+              Contact sales
+            </a>
           </p>
         </div>
       </main>

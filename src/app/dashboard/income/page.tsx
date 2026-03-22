@@ -22,93 +22,151 @@ export default async function IncomePage() {
   const paidInvoices = invoices.filter((i: InvoiceWithClient) => i.status === "PAID");
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight font-geist-sans">Income Analytics</h1>
-          <p className="text-gray-500 mt-1">Track your earnings and visualize business growth.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+            Income analytics
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            Track earnings and business growth.
+          </p>
         </div>
-        <div className="flex gap-2">
-           <Button variant="outline" size="sm" className="gap-2 h-10 px-4 border-gray-200">
-             <Calendar className="w-3.5 h-3.5" />
-             Month to date
-           </Button>
-           <Button className="gap-2 shadow-lg shadow-blue-100 h-10 px-6">
-             <TrendingUp className="w-4 h-4" />
-             View Reports
-           </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 gap-2 border-zinc-300"
+          >
+            <Calendar className="h-3.5 w-3.5" aria-hidden />
+            Month to date
+          </Button>
+          <Button
+            type="button"
+            className="h-10 gap-2 px-6 shadow-md shadow-blue-600/15"
+          >
+            <TrendingUp className="h-4 w-4" aria-hidden />
+            View reports
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="group relative overflow-hidden rounded-3xl border border-zinc-200/80 bg-white p-8 shadow-sm">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <TrendingUp className="w-24 h-24" />
           </div>
-          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Total Received</p>
-          <p className="text-4xl font-extrabold text-gray-900 tracking-tighter">Rp{stats.totalEarned.toLocaleString()}</p>
-          <div className="mt-6 flex items-center gap-2 text-green-600 text-sm font-bold bg-green-50 w-fit px-3 py-1 rounded-full">
-            <ArrowUpRight className="w-4 h-4" /> 
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
+            Total received
+          </p>
+          <p className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
+            Rp{stats.totalEarned.toLocaleString()}
+          </p>
+          <div className="mt-6 flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-800">
+            <ArrowUpRight className="h-4 w-4" aria-hidden />
             <span>+8.2% vs last month</span>
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group">
+        <div className="group relative overflow-hidden rounded-3xl border border-zinc-200/80 bg-white p-8 shadow-sm">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Target className="w-24 h-24" />
           </div>
-          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Projected Income</p>
-          <p className="text-4xl font-extrabold text-gray-900 tracking-tighter">Rp{stats.pendingAmount.toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-6 font-medium italic">From {invoices.filter((i: InvoiceWithClient) => i.status === "SENT").length} open invoices</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
+            Projected income
+          </p>
+          <p className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
+            Rp{stats.pendingAmount.toLocaleString()}
+          </p>
+          <p className="mt-6 text-sm font-medium italic text-zinc-600">
+            From{" "}
+            {invoices.filter((i: InvoiceWithClient) => i.status === "SENT").length}{" "}
+            open invoices
+          </p>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group text-white bg-blue-600">
+        <div className="group relative overflow-hidden rounded-3xl border border-blue-700 bg-blue-600 p-8 text-white shadow-sm">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-white">
             <BarChart2 className="w-24 h-24" />
           </div>
-          <p className="text-sm font-bold text-blue-200 uppercase tracking-widest mb-2">Annual Goal</p>
-          <p className="text-4xl font-extrabold tracking-tight">Rp500,000,000</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-blue-200">
+            Annual goal
+          </p>
+          <p className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+            Rp500,000,000
+          </p>
           <div className="mt-6">
-             <div className="flex justify-between text-xs font-bold text-blue-200 mb-2 uppercase tracking-tight">
-               <span>Progress</span>
-               <span>{Math.round((stats.totalEarned / 500000000) * 100)}%</span>
-             </div>
-             <div className="h-2 bg-blue-800/50 rounded-full overflow-hidden">
-               <div 
-                 className="h-full bg-white rounded-full transition-all duration-1000" 
-                 style={{ width: `${Math.min((stats.totalEarned / 500000000) * 100, 100)}%` }}
-               />
-             </div>
+            <div className="mb-2 flex justify-between text-xs font-bold uppercase tracking-tight text-blue-200">
+              <span>Progress</span>
+              <span>
+                {Math.round((stats.totalEarned / 500000000) * 100)}%
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-blue-900/40">
+              <div
+                className="h-full rounded-full bg-white transition-all duration-1000"
+                style={{
+                  width: `${Math.min((stats.totalEarned / 500000000) * 100, 100)}%`,
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-10">
-        <div className="p-8 border-b bg-gray-50/30">
-          <h2 className="font-bold text-gray-900 text-xl tracking-tight">Income Sources</h2>
+      <div className="mb-10 overflow-hidden rounded-3xl border border-zinc-200/80 bg-white shadow-sm">
+        <div className="border-b border-zinc-100 bg-zinc-50/80 p-6 sm:p-8">
+          <h2 className="text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
+            Income sources
+          </h2>
         </div>
         {paidInvoices.length === 0 ? (
-          <div className="p-24 text-center">
-             <p className="text-gray-400 italic font-medium">No paid invoices found yet. When invoices are marked as paid, they will appear here as income.</p>
+          <div className="p-12 text-center sm:p-24">
+            <p className="text-sm font-medium italic text-zinc-500">
+              No paid invoices yet. When invoices are marked paid, they will
+              appear here.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[560px] border-collapse text-left text-sm">
               <thead>
-                <tr className="bg-gray-50/50">
-                  <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Source Invoice</th>
-                  <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Client</th>
-                  <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Date Paid</th>
-                  <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Amount</th>
+                <tr className="border-b border-zinc-100 bg-zinc-50/80">
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-8 sm:py-5">
+                    Invoice
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-8 sm:py-5">
+                    Client
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-8 sm:py-5">
+                    Date paid
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-8 sm:py-5">
+                    Amount
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-zinc-100">
                 {paidInvoices.map((item: InvoiceWithClient) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-8 py-5 font-extrabold text-blue-600 uppercase">#{item.invoiceNumber}</td>
-                    <td className="px-8 py-5 text-gray-900 font-bold">{item.client.name}</td>
-                    <td className="px-8 py-5 text-gray-500 font-medium">{item.paidDate ? new Date(item.paidDate).toLocaleDateString() : "N/A"}</td>
-                    <td className="px-8 py-5 text-right font-extrabold text-green-600">Rp{(item.totalCents / 100).toLocaleString()}</td>
+                  <tr
+                    key={item.id}
+                    className="transition-colors hover:bg-zinc-50/80"
+                  >
+                    <td className="px-6 py-4 font-semibold uppercase text-blue-700 sm:px-8 sm:py-5">
+                      #{item.invoiceNumber}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-zinc-900 sm:px-8 sm:py-5">
+                      {item.client.name}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-zinc-600 sm:px-8 sm:py-5">
+                      {item.paidDate
+                        ? new Date(item.paidDate).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="px-6 py-4 text-right font-semibold text-emerald-700 sm:px-8 sm:py-5">
+                      Rp{(item.totalCents / 100).toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>

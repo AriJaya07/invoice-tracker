@@ -11,24 +11,30 @@ export const SubscriptionNotice = () => {
   if (!isTrial) return null;
 
   return (
-    <div className={`p-4 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-300 ${
-      trialDaysRemaining <= 3 
-        ? "bg-red-50 border-red-200 text-red-800" 
-        : "bg-blue-50 border-blue-200 text-blue-800"
-    }`}>
-      <div className="flex items-center gap-3">
-        <Clock className="w-5 h-5 opacity-80" />
-        <p className="text-sm font-medium">
-          {trialDaysRemaining > 0 
-            ? `Free trial active: ${trialDaysRemaining} days remaining.` 
-            : "Free trial expired. Please upgrade to continue using InvoiceFlow."
-          }
+    <div
+      role="status"
+      className={`flex flex-col items-stretch gap-4 rounded-xl border p-4 transition-colors sm:flex-row sm:items-center sm:justify-between ${
+        trialDaysRemaining <= 3
+          ? "border-red-200 bg-red-50 text-red-900"
+          : "border-blue-200 bg-blue-50 text-blue-900"
+      }`}
+    >
+      <div className="flex items-start gap-3 sm:items-center">
+        <Clock className="mt-0.5 h-5 w-5 shrink-0 opacity-80" aria-hidden />
+        <p className="text-sm font-medium leading-snug">
+          {trialDaysRemaining > 0
+            ? `Free trial active: ${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remaining.`
+            : "Your free trial has ended. Upgrade to keep using InvoiceFlow."}
         </p>
       </div>
-      <Link href="/pricing">
-         <Button variant="outline" size="sm" className="bg-white border-transparent hover:bg-gray-50">
-           Upgrade Plan
-         </Button>
+      <Link href="/pricing" className="shrink-0 sm:self-center">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full border-zinc-200 bg-white hover:bg-zinc-50 sm:w-auto"
+        >
+          Upgrade plan
+        </Button>
       </Link>
     </div>
   );

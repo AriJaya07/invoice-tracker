@@ -11,47 +11,88 @@ interface RecentInvoicesProps {
 export const RecentInvoices = ({ invoices }: RecentInvoicesProps) => {
   if (invoices.length === 0) {
     return (
-      <div className="p-12 text-center text-gray-500 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
-        <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-10" />
-        <p className="font-medium italic">No recent activity. Create your first invoice to get started.</p>
+      <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/50 p-10 text-center text-zinc-600 sm:p-12">
+        <AlertCircle
+          className="mx-auto mb-4 h-12 w-12 text-zinc-300"
+          aria-hidden
+        />
+        <p className="font-medium">
+          No recent activity yet. Create your first invoice to get started.
+        </p>
         <Link href="/dashboard/invoices/new" className="mt-4 inline-block">
-          <Button variant="outline" size="sm">Create New Invoice</Button>
+          <Button variant="outline" size="sm">
+            Create invoice
+          </Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-gray-100 shadow-sm">
-      <table className="w-full text-left border-collapse bg-white">
+    <div className="overflow-x-auto rounded-2xl border border-zinc-200/80 shadow-sm">
+      <table className="w-full min-w-[520px] border-collapse bg-white text-left text-sm">
         <thead>
-          <tr className="bg-gray-50/50">
-            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Number</th>
-            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Client</th>
-            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Amount</th>
-            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Due</th>
-            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">Status</th>
+          <tr className="border-b border-zinc-100 bg-zinc-50/80">
+            <th
+              scope="col"
+              className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-6 sm:py-4"
+            >
+              Number
+            </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-6 sm:py-4"
+            >
+              Client
+            </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-6 sm:py-4"
+            >
+              Amount
+            </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-6 sm:py-4"
+            >
+              Due
+            </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-6 sm:py-4"
+            >
+              Status
+            </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-zinc-100">
           {invoices.map((invoice) => (
-            <tr key={invoice.id} className="hover:bg-gray-50 transition-colors cursor-pointer group">
-              <td className="px-6 py-4">
-                <span className="font-extrabold text-blue-600 group-hover:underline">#{invoice.invoiceNumber}</span>
+            <tr
+              key={invoice.id}
+              className="transition-colors hover:bg-zinc-50/80"
+            >
+              <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                <span className="font-semibold text-blue-700">
+                  #{invoice.invoiceNumber}
+                </span>
               </td>
-              <td className="px-6 py-4">
-                <div className="flex flex-col">
-                  <span className="font-bold text-gray-900">{invoice.client.name}</span>
-                  <span className="text-[10px] text-gray-400 font-medium">{invoice.client.email}</span>
+              <td className="px-4 py-4 sm:px-6">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium text-zinc-900">
+                    {invoice.client.name}
+                  </span>
+                  <span className="text-xs text-zinc-500">
+                    {invoice.client.email}
+                  </span>
                 </div>
               </td>
-              <td className="px-6 py-4 font-extrabold text-gray-900 text-right">
+              <td className="whitespace-nowrap px-4 py-4 text-right font-semibold text-zinc-900 sm:px-6">
                 Rp{(invoice.totalCents / 100).toLocaleString()}
               </td>
-              <td className="px-6 py-4 text-xs text-gray-500 font-medium">
+              <td className="whitespace-nowrap px-4 py-4 text-xs font-medium text-zinc-600 sm:px-6">
                 {new Date(invoice.dueDate).toLocaleDateString()}
               </td>
-              <td className="px-6 py-4 text-center">
+              <td className="px-4 py-4 text-center sm:px-6">
                 <Badge status={invoice.status} />
               </td>
             </tr>

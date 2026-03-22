@@ -4,11 +4,24 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createInvoiceAction } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Save, Plus, Trash2, Calendar, User, FileText, TrendingUp } from "lucide-react";
+import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
+import { fieldBase } from "@/components/ui/field-classes";
+import { cn } from "@/lib/cn";
+import {
+  ArrowLeft,
+  Save,
+  Plus,
+  Trash2,
+  Calendar,
+  User,
+  FileText,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 interface NewInvoiceFormProps {
-  clients: any[];
+  clients: { id: string; name: string; email: string }[];
 }
 
 export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
@@ -18,7 +31,9 @@ export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
     clientId: "",
     invoiceNumber: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
     issueDate: new Date().toISOString().split("T")[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
     notes: "",
   });
 
@@ -27,7 +42,7 @@ export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
   ]);
 
   const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   }, [items]);
 
   const addItem = () => {
@@ -39,14 +54,18 @@ export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: string | number) => {
     const newItems = [...items];
-    (newItems[index] as any)[field] = field === "description" ? value : Number(value);
+    (newItems[index] as Record<string, string | number>)[field] =
+      field === "description" ? value : Number(value);
     setItems(newItems);
   };
 
   async function handleSubmit() {
-    if (!formData.clientId) return alert("Please select a client");
+    if (!formData.clientId) {
+      alert("Please select a client");
+      return;
+    }
     setIsSubmitting(true);
     try {
       await createInvoiceAction({
@@ -62,183 +81,270 @@ export const NewInvoiceForm = ({ clients }: NewInvoiceFormProps) => {
     }
   }
 
+  const compactField = cn(
+    fieldBase,
+    "rounded-xl py-3 text-sm font-medium"
+  );
+
   return (
-    <div className="max-w-5xl mx-auto space-y-10 pb-20">
-      <div className="flex items-center justify-between">
-        <Link href="/dashboard/invoices" className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest">
-          <ArrowLeft className="w-4 h-4" />
+    <div className="mx-auto max-w-5xl space-y-8 pb-20 sm:space-y-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <Link
+          href="/dashboard/invoices"
+          className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 transition-colors hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded-md"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
         </Link>
-        <div className="flex gap-4">
-          <Button variant="outline" className="border-gray-200">Save Draft</Button>
-          <Button onClick={handleSubmit} isLoading={isSubmitting} className="gap-2 shadow-xl shadow-blue-100 px-8">
-            <Save className="w-4 h-4" />
-            Create Invoice
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" className="w-full sm:w-auto">
+            Save draft
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            isLoading={isSubmitting}
+            className="w-full gap-2 shadow-md shadow-blue-600/15 sm:w-auto sm:px-8"
+          >
+            <Save className="h-4 w-4" aria-hidden />
+            Create invoice
           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-2xl overflow-hidden">
-        <div className="p-10 md:p-16 space-y-16">
-          {/* Header Row */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-10">
-            <div className="space-y-6">
-               <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-blue-200">
-                  <FileText className="w-10 h-10" />
-               </div>
-               <div>
-                  <h1 className="text-3xl font-black text-gray-900 tracking-tight">Generate Invoice</h1>
-                  <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mt-2 px-1">Professional Billing</p>
-               </div>
+      <div className="overflow-hidden rounded-3xl border border-zinc-200/80 bg-white shadow-sm">
+        <div className="space-y-12 p-6 sm:p-10 md:p-14">
+          <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-start">
+            <div className="space-y-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/25 sm:h-20 sm:w-20 sm:rounded-3xl">
+                <FileText className="h-8 w-8 sm:h-10 sm:w-10" aria-hidden />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+                  New invoice
+                </h1>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                  Professional billing
+                </p>
+              </div>
             </div>
-            <div className="w-full md:w-auto self-end">
-               <div className="bg-gray-50/80 p-6 rounded-3xl border border-gray-100">
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Invoice Number</label>
-                  <input 
-                    type="text" 
-                    value={formData.invoiceNumber}
-                    onChange={(e) => setFormData({...formData, invoiceNumber: e.target.value})}
-                    className="bg-transparent border-none p-0 text-2xl font-black text-gray-900 focus:ring-0 w-full md:text-right" 
-                  />
-               </div>
+            <div className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 sm:w-auto sm:min-w-[240px] sm:self-end sm:p-6">
+              <label
+                htmlFor="invoice-number"
+                className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-500"
+              >
+                Invoice number
+              </label>
+              <input
+                id="invoice-number"
+                type="text"
+                value={formData.invoiceNumber}
+                onChange={(e) =>
+                  setFormData({ ...formData, invoiceNumber: e.target.value })
+                }
+                className="w-full border-0 bg-transparent p-0 text-xl font-bold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:ring-offset-2 rounded sm:text-right sm:text-2xl"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 pt-8 border-t border-gray-100">
-             {/* Client Section */}
-             <div className="space-y-8">
-               <div className="flex items-center gap-3 text-blue-600">
-                  <User className="w-5 h-5" />
-                  <label className="text-xs font-black uppercase tracking-[0.2em]">Bill To Client</label>
-               </div>
-               <div className="space-y-4">
-                  <select 
-                    value={formData.clientId}
-                    onChange={(e) => setFormData({...formData, clientId: e.target.value})}
-                    className="w-full bg-gray-50 border-2 border-transparent rounded-[24px] px-6 py-5 text-gray-900 font-extrabold focus:border-blue-100 focus:bg-white transition-all appearance-none shadow-sm cursor-pointer"
-                  >
-                     <option value="" disabled>Select a customer...</option>
-                     {clients.map(client => (
-                       <option key={client.id} value={client.id}>{client.name} ({client.email})</option>
-                     ))}
-                  </select>
-                  <Link href="/dashboard/clients" className="text-xs text-blue-600 font-black hover:underline px-2 inline-block tracking-widest">+ NEW CLIENT</Link>
-               </div>
-             </div>
-
-             {/* Dates Section */}
-             <div className="space-y-8">
-                <div className="flex items-center gap-3 text-blue-600">
-                   <Calendar className="w-5 h-5" />
-                   <label className="text-xs font-black uppercase tracking-[0.2em]">Invoice Timeline</label>
-                </div>
-                <div className="grid grid-cols-2 gap-6 font-geist-sans">
-                   <div className="space-y-3">
-                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 text-center">ISSUE DATE</p>
-                     <input 
-                       type="date" 
-                       value={formData.issueDate}
-                       onChange={(e) => setFormData({...formData, issueDate: e.target.value})}
-                       className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-extrabold text-gray-900 focus:ring-4 focus:ring-blue-50 transition-all text-center" 
-                     />
-                   </div>
-                   <div className="space-y-3">
-                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 text-center">DUE DATE</p>
-                     <input 
-                       type="date" 
-                       value={formData.dueDate}
-                       onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
-                       className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-extrabold text-gray-900 focus:ring-4 focus:ring-blue-50 transition-all text-center" 
-                     />
-                   </div>
-                </div>
-             </div>
-          </div>
-
-          {/* Items Table */}
-          <div className="space-y-8">
-             <div className="flex items-center gap-3 text-blue-600">
-                <Plus className="w-5 h-5" />
-                <label className="text-xs font-black uppercase tracking-[0.2em]">Service Details</label>
-             </div>
-             
-             <div className="space-y-4">
-                {items.map((item, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_100px_180px_60px] gap-4 bg-gray-50/30 p-4 rounded-3xl border border-gray-50 items-center animate-in slide-in-from-left duration-300">
-                     <input 
-                        placeholder="What service was provided?" 
-                        value={item.description}
-                        onChange={(e) => updateItem(index, "description", e.target.value)}
-                        className="bg-white border-gray-100 rounded-xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-gray-300" 
-                     />
-                     <input 
-                        placeholder="Qty" 
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                        className="bg-white border-gray-100 rounded-xl px-5 py-4 text-sm font-black text-center focus:ring-4 focus:ring-blue-50 transition-all" 
-                     />
-                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-300 italic">Rp</span>
-                        <input 
-                           placeholder="Price" 
-                           type="number" 
-                           value={item.unitPrice}
-                           onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
-                           className="w-full bg-white border-gray-100 rounded-xl pl-12 pr-5 py-4 text-sm font-black text-right focus:ring-4 focus:ring-blue-50 transition-all" 
-                        />
-                     </div>
-                     <button 
-                        onClick={() => removeItem(index)}
-                        disabled={items.length === 1}
-                        className="text-gray-200 hover:text-red-500 transition-all flex items-center justify-center p-2 rounded-xl hover:bg-red-50 disabled:opacity-0"
-                     >
-                        <Trash2 className="w-5 h-5" />
-                     </button>
-                  </div>
+          <div className="grid grid-cols-1 gap-12 border-t border-zinc-100 pt-10 md:grid-cols-2 md:gap-16">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-blue-700">
+                <User className="h-5 w-5" aria-hidden />
+                <span className="text-xs font-bold uppercase tracking-widest">
+                  Bill to
+                </span>
+              </div>
+              <Select
+                label="Client"
+                value={formData.clientId}
+                onChange={(e) =>
+                  setFormData({ ...formData, clientId: e.target.value })
+                }
+                required
+              >
+                <option value="">Select a customer…</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} ({client.email})
+                  </option>
                 ))}
-             </div>
-             
-             <Button 
-                variant="outline" 
-                onClick={addItem}
-                className="gap-3 border-dashed border-2 px-8 rounded-2xl hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all py-6 font-bold uppercase tracking-widest text-[10px]"
-             >
-                <Plus className="w-4 h-4" />
-                Add Line Item
-             </Button>
+              </Select>
+              <Link
+                href="/dashboard/clients"
+                className="inline-block text-xs font-bold uppercase tracking-widest text-blue-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-sm"
+              >
+                + New client
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-blue-700">
+                <Calendar className="h-5 w-5" aria-hidden />
+                <span className="text-xs font-bold uppercase tracking-widest">
+                  Timeline
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="issue-date"
+                    className="block text-center text-[10px] font-bold uppercase tracking-widest text-zinc-500"
+                  >
+                    Issue date
+                  </label>
+                  <input
+                    id="issue-date"
+                    type="date"
+                    value={formData.issueDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, issueDate: e.target.value })
+                    }
+                    className={cn(compactField, "text-center")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="due-date"
+                    className="block text-center text-[10px] font-bold uppercase tracking-widest text-zinc-500"
+                  >
+                    Due date
+                  </label>
+                  <input
+                    id="due-date"
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dueDate: e.target.value })
+                    }
+                    className={cn(compactField, "text-center")}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between gap-20 pt-12 border-t border-gray-100">
-             <div className="flex-1 space-y-6">
-               <label className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Notes & Payment Terms</label>
-               <textarea 
-                  placeholder="e.g. Please pay within 30 days. Transfer to Bank BCA 1234567890..." 
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  className="w-full bg-gray-50 border-none rounded-[32px] p-8 text-sm font-medium min-h-[180px] focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-gray-300"
-               />
-             </div>
-             
-             <div className="w-full md:w-80 p-10 bg-gray-900 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                   <TrendingUp className="w-40 h-40" />
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Plus className="h-5 w-5" aria-hidden />
+              <span className="text-xs font-bold uppercase tracking-widest">
+                Line items
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 items-center gap-3 rounded-2xl border border-zinc-100 bg-zinc-50/50 p-3 sm:grid-cols-[1fr_5rem_7rem_2.5rem] md:grid-cols-[1fr_6rem_8rem_2.5rem] md:gap-4 md:p-4"
+                >
+                  <input
+                    aria-label={`Line ${index + 1} description`}
+                    placeholder="Service or product description"
+                    value={item.description}
+                    onChange={(e) =>
+                      updateItem(index, "description", e.target.value)
+                    }
+                    className={compactField}
+                  />
+                  <input
+                    aria-label={`Line ${index + 1} quantity`}
+                    placeholder="Qty"
+                    type="number"
+                    min={0}
+                    value={item.quantity}
+                    onChange={(e) =>
+                      updateItem(index, "quantity", e.target.value)
+                    }
+                    className={cn(compactField, "text-center")}
+                  />
+                  <div className="relative">
+                    <span
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-400"
+                      aria-hidden
+                    >
+                      Rp
+                    </span>
+                    <input
+                      aria-label={`Line ${index + 1} unit price`}
+                      placeholder="0"
+                      type="number"
+                      min={0}
+                      value={item.unitPrice || ""}
+                      onChange={(e) =>
+                        updateItem(index, "unitPrice", e.target.value)
+                      }
+                      className={cn(compactField, "pl-10 text-right")}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    disabled={items.length === 1}
+                    className="flex h-11 w-full items-center justify-center rounded-xl text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 disabled:pointer-events-none disabled:opacity-30 sm:h-auto sm:w-auto"
+                    aria-label={`Remove line ${index + 1}`}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
-                <div className="relative z-10 space-y-6">
-                   <div className="flex justify-between items-center pb-6 border-b border-white/10 opacity-70">
-                      <span className="text-xs font-bold uppercase tracking-widest">Subtotal</span>
-                      <span className="font-bold">Rp{subtotal.toLocaleString()}</span>
-                   </div>
-                   <div className="flex justify-between items-center opacity-70">
-                      <span className="text-xs font-bold uppercase tracking-widest">Tax (0%)</span>
-                      <span className="font-bold">Rp0</span>
-                   </div>
-                   <div className="pt-6 border-t border-white/20 flex justify-between items-center">
-                      <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">GRAND TOTAL</span>
-                      <span className="text-3xl font-black">Rp{subtotal.toLocaleString()}</span>
-                   </div>
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addItem}
+              className="w-full gap-2 border-2 border-dashed border-zinc-300 py-5 text-xs font-bold uppercase tracking-widest hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-800 sm:w-auto sm:px-8"
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              Add line item
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-10 border-t border-zinc-100 pt-10 lg:flex-row lg:justify-between">
+            <div className="min-w-0 flex-1 space-y-3">
+              <Textarea
+                label="Notes & payment terms"
+                placeholder="e.g. Payment due within 30 days. Bank transfer to …"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                rows={6}
+                className="min-h-[160px] rounded-2xl"
+              />
+            </div>
+
+            <div className="relative w-full shrink-0 overflow-hidden rounded-3xl bg-zinc-900 p-8 text-white shadow-xl lg:w-80">
+              <TrendingUp
+                className="pointer-events-none absolute -right-2 -top-2 h-32 w-32 text-white/[0.06]"
+                aria-hidden
+              />
+              <div className="relative space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4 text-sm text-zinc-300">
+                  <span className="font-semibold uppercase tracking-wider">
+                    Subtotal
+                  </span>
+                  <span className="font-semibold text-white">
+                    Rp{subtotal.toLocaleString()}
+                  </span>
                 </div>
-             </div>
+                <div className="flex items-center justify-between text-sm text-zinc-300">
+                  <span className="font-semibold uppercase tracking-wider">
+                    Tax (0%)
+                  </span>
+                  <span className="font-semibold text-white">Rp0</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-white/20 pt-4">
+                  <span className="text-xs font-bold uppercase tracking-widest text-blue-300">
+                    Total
+                  </span>
+                  <span className="text-2xl font-bold tracking-tight">
+                    Rp{subtotal.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

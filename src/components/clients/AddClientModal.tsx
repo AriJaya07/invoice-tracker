@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createClientAction } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -13,6 +13,23 @@ interface AddClientModalProps {
 
 export const AddClientModal = ({ isOpen, onClose }: AddClientModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    closeRef.current?.focus();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -29,33 +46,90 @@ export const AddClientModal = ({ isOpen, onClose }: AddClientModalProps) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-8 border-b flex justify-between items-center bg-gray-50/50">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-zinc-900/50 backdrop-blur-sm"
+        aria-label="Close dialog"
+        onClick={onClose}
+      />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-zinc-200 bg-white shadow-2xl sm:rounded-3xl"
+      >
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50/90 px-6 py-5 backdrop-blur-sm">
           <div>
-            <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Add New Client</h2>
-            <p className="text-sm text-gray-500 mt-1">Create a new customer profile for billing.</p>
+            <h2
+              id={titleId}
+              className="text-lg font-bold tracking-tight text-zinc-900"
+            >
+              Add new client
+            </h2>
+            <p className="mt-1 text-sm text-zinc-600">
+              Create a customer profile for billing.
+            </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-gray-900">
-            <X className="w-5 h-5" />
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
 
-        <form action={handleSubmit} className="p-8 space-y-6">
-          <Input label="Client/Individual Name" name="name" required placeholder="John Doe or Acme Inc." />
-          <Input label="Email Address" name="email" type="email" required placeholder="billing@client.com" />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Company Name (Optional)" name="companyName" placeholder="Acme Corporation" />
-            <Input label="Phone Number" name="phone" placeholder="+62 812..." />
+        <form action={handleSubmit} className="space-y-5 p-6">
+          <Input
+            label="Client name"
+            name="name"
+            required
+            placeholder="John Doe or Acme Inc."
+            autoComplete="organization"
+          />
+          <Input
+            label="Email address"
+            name="email"
+            type="email"
+            required
+            placeholder="billing@client.com"
+            autoComplete="email"
+          />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Company (optional)"
+              name="companyName"
+              placeholder="Acme Corporation"
+              autoComplete="organization"
+            />
+            <Input
+              label="Phone"
+              name="phone"
+              type="tel"
+              placeholder="+62 812…"
+              autoComplete="tel"
+            />
           </div>
 
-          <Input label="Address" name="address" placeholder="123 Business St, Jakarta" />
-          
-          <div className="flex justify-end gap-3 mt-8">
-            <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
-            <Button type="submit" isLoading={isSubmitting}>Save Client</Button>
+          <Input
+            label="Address"
+            name="address"
+            placeholder="123 Business St, Jakarta"
+            autoComplete="street-address"
+          />
+
+          <div className="flex flex-col-reverse gap-3 border-t border-zinc-100 pt-6 sm:flex-row sm:justify-end">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" isLoading={isSubmitting}>
+              Save client
+            </Button>
           </div>
         </form>
       </div>

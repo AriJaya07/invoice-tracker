@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/lib/validations";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
+import { FormDivider } from "@/components/ui/FormDivider";
 
 export function LoginForm() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export function LoginForm() {
         router.push(callbackUrl);
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -56,11 +57,12 @@ export function LoginForm() {
   return (
     <div className="mt-8 space-y-6">
       <Button
+        type="button"
         variant="outline"
-        className="w-full flex items-center justify-center gap-2"
+        className="w-full"
         onClick={handleGoogleSignIn}
       >
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
+        <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
           <path
             fill="currentColor"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -81,21 +83,10 @@ export function LoginForm() {
         Sign in with Google
       </Button>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-200" />
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or continue with</span>
-        </div>
-      </div>
+      <FormDivider label="Or continue with email" />
 
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        {error && (
-          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm border border-red-100">
-            {error}
-          </div>
-        )}
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        {error ? <Alert variant="error">{error}</Alert> : null}
         <Input
           label="Email address"
           type="email"
@@ -113,12 +104,13 @@ export function LoginForm() {
           {...register("password")}
         />
 
-        <div className="flex items-center justify-between">
-          <div className="text-sm">
-            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-              Forgot your password?
-            </a>
-          </div>
+        <div className="flex items-center justify-end">
+          <a
+            href="#"
+            className="text-sm font-medium text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded-sm"
+          >
+            Forgot your password?
+          </a>
         </div>
 
         <Button
