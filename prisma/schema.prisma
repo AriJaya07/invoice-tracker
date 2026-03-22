@@ -1,15 +1,373 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ============================================================
+// InvoiceFlow — Full Prisma Schema
+// Database: PostgreSQL
+// Auth: NextAuth v5 (PrismaAdapter)
+// Payments: Midtrans
+// ============================================================
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum IncomeCategory {
+  INVOICE
+  RETAINER
+  FREELANCE
+  CONSULTING
+  OTHER
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  BUSINESS
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CREDIT_CARD
+  PAYPAL
+  MIDTRANS
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+// ─── NEXTAUTH MODELS ─────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── USER ────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?   // null for OAuth users
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Business Profile
+  companyName   String?
+  companyLogo   String?  // URL to stored logo
+  address       String?
+  city          String?
+  country       String?
+  taxId         String?  // VAT / EIN / ABN etc.
+  phone         String?
+  website       String?
+
+  // Invoice defaults
+  defaultCurrency     String @default("IDR")
+  defaultPaymentTerms Int    @default(30) // days
+  defaultTaxRate      Float  @default(0)
+  defaultInvoiceNote  String?
+  invoicePrefix       String @default("INV-")
+  nextInvoiceNumber   Int    @default(1)
+
+  // Trial tracking
+  trialStartDate DateTime?
+  trialEndDate   DateTime?
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  subscription  Subscription?
+  payments      Payment[]
+  clients       Client[]
+  invoices      Invoice[]
+  incomeEntries IncomeEntry[]
+  emailLogs     EmailLog[]
+
+  @@map("users")
+}
+
+// ─── SUBSCRIPTION ────────────────────────────────────────────
+
+model Subscription {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Midtrans
+  midtransCustomerId String?
+
+  plan   SubscriptionPlan   @default(FREE)
+  status SubscriptionStatus @default(TRIALING)
+
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean  @default(false)
+  cancelledAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+// ─── PAYMENT ─────────────────────────────────────────────────
+
+model Payment {
+  id       String @id @default(uuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Midtrans fields
+  orderId         String  @unique // our generated order ID
+  amount          Int     // in IDR (smallest unit)
+  currency        String  @default("IDR")
+  status          PaymentStatus @default(PENDING)
+  snapToken       String? // Midtrans Snap token
+  snapRedirectUrl String?
+
+  // What this payment is for
+  plan     SubscriptionPlan
+  billingPeriod String? // "monthly" | "yearly"
+
+  // Midtrans notification data
+  transactionId     String?
+  transactionStatus String?
+  fraudStatus       String?
+  paymentType       String?
+  metadata          Json?
+
+  paidAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@map("payments")
+}
+
+// ─── CLIENT ──────────────────────────────────────────────────
+
+model Client {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  name        String
+  email       String
+  phone       String?
+  website     String?
+  avatarColor String? // hex color for avatar placeholder
+
+  // Address
+  address String?
+  city    String?
+  state   String?
+  country String?
+  zipCode String?
+
+  // Business
+  companyName String?
+  taxId       String?
+  currency    String  @default("IDR")
+
+  notes      String?
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  invoices Invoice[]
+
+  @@unique([userId, email])
+  @@map("clients")
+}
+
+// ─── INVOICE ─────────────────────────────────────────────────
+
+model Invoice {
+  id       String @id @default(uuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  // Invoice Info
+  invoiceNumber String        // e.g. INV-042
+  status        InvoiceStatus @default(DRAFT)
+  currency      String        @default("IDR")
+
+  // Dates
+  issueDate DateTime
+  dueDate   DateTime
+  paidDate  DateTime?
+
+  // Financials (stored in cents to avoid float issues)
+  subtotalCents  Int   @default(0)
+  taxRate        Float @default(0)
+  taxAmountCents Int   @default(0)
+  discountCents  Int   @default(0)
+  totalCents     Int   @default(0)
+
+  // Content
+  notes        String? // shown on invoice
+  internalNote String? // private, not on invoice
+  footer       String?
+
+  // PDF
+  pdfUrl String? // Storage URL
+
+  // Payment
+  paymentMethod PaymentMethod?
+  paymentRef    String?        // transaction ID / cheque number
+
+  // Recurring
+  isRecurring       Boolean  @default(false)
+  recurringInterval String?  // "monthly" | "weekly" | "yearly"
+  recurringEndDate  DateTime?
+  parentInvoiceId   String?  // for recurring copies
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  lineItems   InvoiceLineItem[]
+  emailLogs   EmailLog[]
+  incomeEntry IncomeEntry?
+
+  @@unique([userId, invoiceNumber])
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@map("invoices")
+}
+
+// ─── INVOICE LINE ITEM ───────────────────────────────────────
+
+model InvoiceLineItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description String
+  quantity    Float  @default(1)
+  unitPrice   Float  // display value
+  totalPrice  Float
+
+  sortOrder Int @default(0)
+
+  @@map("invoice_line_items")
+}
+
+// ─── INCOME ENTRY ────────────────────────────────────────────
+
+model IncomeEntry {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Optional link to invoice
+  invoiceId String?  @unique
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  source      String         // e.g. "Client Payment – Acme Corp"
+  category    IncomeCategory @default(OTHER)
+  amountCents Int            // stored in cents
+  currency    String         @default("IDR")
+  date        DateTime
+
+  note String?
+  tags String[] // flexible tagging
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([userId, category])
+  @@map("income_entries")
+}
+
+// ─── EMAIL LOG ───────────────────────────────────────────────
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  to        String
+  subject   String
+  status    String   // "sent" | "failed" | "bounced"
+  provider  String   @default("resend")
+  messageId String?  // provider message ID
+
+  sentAt DateTime @default(now())
+
+  @@map("email_logs")
 }
